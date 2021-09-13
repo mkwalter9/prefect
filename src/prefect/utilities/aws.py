@@ -8,6 +8,8 @@ import weakref
 import prefect
 
 import boto3
+from botocore.config import Config
+import json
 from typing import TYPE_CHECKING, Any, Optional, MutableMapping
 
 if TYPE_CHECKING:
@@ -25,6 +27,7 @@ def get_boto_client(
     credentials: Optional[dict] = None,
     region_name: Optional[str] = None,
     profile_name: Optional[str] = None,
+    config: Optional[str] = None,
     **kwargs: Any
 ) -> "botocore.client.BaseClient":
     """
@@ -42,6 +45,7 @@ def get_boto_client(
         - region_name (str, optional): The aws region name to use, defaults to your
             global configured default.
         - profile_name (str, optional): The name of a boto3 profile to use.
+        - config (str, optional): A stringified config object to add extra config options
         - **kwargs (Any, optional): additional keyword arguments to pass to boto3
 
     Returns:
@@ -114,12 +118,15 @@ def get_boto_client(
         else:
             session = boto3
 
+        config_obj = Config(json.loads(config))
+
         client = session.client(
             resource,
             aws_access_key_id=aws_access_key,
             aws_secret_access_key=aws_secret_access_key,
             aws_session_token=aws_session_token,
             region_name=region_name,
+            config=config_obj,
             **kwargs,
         )
         # Cache the client if no extra kwargs
